@@ -11,11 +11,11 @@ import idc
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-ACTION_NAME = "Enum (bit test)"
-PLUGIN_DISPLAY_NAME = "Enum from Bit Test"
-PLUGIN_HELP = "Searches imported enumerations which match the bit test value"
+ACTION_NAME = "Enum (bit flag)"
+PLUGIN_DISPLAY_NAME = "Enum from Bit Flag"
+PLUGIN_HELP = "Searches imported enumerations for a bit flag which match the bit test value"
 PLUGIN_SHORTCUT = "Alt+Shift+M"
-PLUGIN_COMMENT = "Apply an enumeration from a bit test value"
+PLUGIN_COMMENT = "Apply an enumeration from a bit flag location"
 PLUGIN_MENU_PATH = "Edit/Operand type"
 LOG_LEVEL = logging.ERROR
 
@@ -37,11 +37,16 @@ class ApplyEnumHandler(idaapi.action_handler_t):
             enum_id = ida_enum.getn_enum(i)
             if not enum_id:
                 continue
-            enum_is_bf = ida_enum.is_bf(enum_id)
-            if enum_is_bf:
+            
+            enum_is_bitfield = ida_enum.is_bf(enum_id)
+            if enum_is_bitfield:
+                # If the enum is a bitfield which contains (binary) flags, chances are
+                # the mask for each member is equal to the flag.
                 const_id = ida_enum.get_enum_member(enum_id, enum_value, 0, enum_value)
             else:
-                const_id = ida_enum.get_enum_member(enum_id, enum_value, 0, 0xFFFFFFFF)
+                # Otherwise, no mask!
+                const_id = ida_enum.get_enum_member(enum_id, enum_value, 0, 0)
+            # Returns BADNODE if not found
             if const_id != ida_netnode.BADNODE:
                 # Looks legitimate, grab the enum name and const name
                 const_name = ida_enum.get_enum_member_name(const_id)
@@ -156,15 +161,15 @@ class bit_tester_plugin_t(idaapi.plugin_t):
 
 
 
-class BitTesterDataFormat(ida_bytes.data_format_t):
-    FORMAT_NAME = 'bittester_data_format'
+class BitFlagDataFormat(ida_bytes.data_format_t):
+    FORMAT_NAME = 'bitflag_data_format'
     def __init__(self):
-        self.logger = init_logger('bittester_data_format')
+        self.logger = init_logger('bitflag_data_format')
         ida_bytes.data_format_t.__init__(
             self, 
-            'py_bittestval',
+            'py_bitflag',
             1,
-            "Bittest"
+            "Bit Flag"
         )
 
     def is_present_in_menus(self):
@@ -321,10 +326,10 @@ class BitTesterWidget(QtWidgets.QDialog):
         
 ####################### PLUGIN ENTRY #########################
 def PLUGIN_ENTRY():
-    global ENUM_HANDLER, DATAFMT_HANDLER
+    global ENUM_HANDLER
     try:
         ENUM_HANDLER = ApplyEnumHandler()
-        ida_bytes.register_data_types_and_formats([(BitTesterDataFormat(),)])
+        ida_bytes.register_data_types_and_formats([(BitFlagDataFormat(),)])
         return bit_tester_plugin_t()
     except Exception as e:
         idaapi.msg(f"Failed to initialize plugin: {e}\n")
