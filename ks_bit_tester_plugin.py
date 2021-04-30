@@ -1,9 +1,6 @@
 import logging
 import sys
 import typing
-from ida_hexrays import get_current_operand
-from ida_offset import get_offset_expression
-from ida_typeinf import til_symbol_t
 
 import idaapi
 import ida_bytes
@@ -13,7 +10,6 @@ import ida_netnode
 import idc
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from idc_bc695 import GetFixupTgtDispl
 
 ACTION_NAME = "Enum (bit test)"
 PLUGIN_DISPLAY_NAME = "Enum from Bit Test"
