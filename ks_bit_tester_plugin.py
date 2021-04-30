@@ -186,7 +186,7 @@ def init_logger(logger_name:typing.AnyStr, log_level=None):
     console.setFormatter(formatter)
     console.setLevel(log_level or LOG_LEVEL)
     logger.addHandler(console)
-    logger.setLevel(log_level)
+    logger.setLevel(log_level or LOG_LEVEL)
     return logger
 
 ########################### UI STUFF ###########################
