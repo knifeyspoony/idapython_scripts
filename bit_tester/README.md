@@ -453,7 +453,7 @@ class Ui_BitTesterDialog(object):
 We add an `__init__` method to the UI component to create a logger, and also pass a `valueStr` parameter. This was added so we can display the bit mask in the window title, accomplished by the following:
 
 ```python
-   	if self.valueStr:
+   if self.valueStr:
         BitTesterDialog.setWindowTitle(_translate("BitTesterDialog", f"Apply Enum from Bit Test Value: {self.valueStr}"))
     else:
         BitTesterDialog.setWindowTitle(_translate("BitTesterDialog", f"Apply Enum from Bit Test Value"))
