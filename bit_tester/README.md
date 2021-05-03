@@ -4,7 +4,7 @@ Just copy the file `ks_bit_tester_plugin.py` to your `plugins` folder in your ID
 # Usage
 When you see a bit test, select the immediate/line and press `Alt+Shift+M`. If there's a constant that matches the corresponding bit mask for the bit test, you can display the enumeration constant instead of the immediate value.
 
-![Example usage](images/ida_qt_finished_product.png)
+![Example usage](images/ida_plugin_usage.png)
 <br>
 <sup>Example usage</sup>
 
@@ -334,7 +334,7 @@ First, we want to wire up our *OK* and *Cancel* buttons. This means we want to w
 
 This is really simple to accomplish, just click anywhere within the OK/Cancel button area, and drag the connection to the *QDialog*. Since our components are filling up the whole box, the easiest way is to just drag to the very top of our dialog component (where our window title is). We can see the signals and slots displayed for both components, so select *accepted()*, then *accept()*. Repeat for *rejected()* and *reject()*:
 
-![Configuring our signals and slots](images/ida_qt_signals_and_slots.png)
+![Configuring our signals and slots](images/ida_qt_setup_signals_and_slots.png)
 <br>
 <sup>Configuring our signals and slots</sup>
 
@@ -704,7 +704,7 @@ We can put everything into a single .py file to make it easy to "install" the pl
 
 Here's an example usage of the finished product:
 
-![Our plugin in action!](images/ida_qt_finished_product.png)
+![Our plugin in action!](images/ida_plugin_usage.png)
 <br>
 <sup>Our plugin in action!</sup>
 
