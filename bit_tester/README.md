@@ -2,7 +2,11 @@
 Just copy the file `ks_bit_tester_plugin.py` to your `plugins` folder in your IDA Pro installation, e.g. `C:\Program Files\IDA Pro 7.6\plugins`
 
 # Usage
-When you see a bit test: select the immediate/line and press `Alt+Shift+M`. If there's a constant that matches the corresponding bit mask for the bit test, you can display the enumeration constant instead of the immediate value.
+When you see a bit test, select the immediate/line and press `Alt+Shift+M`. If there's a constant that matches the corresponding bit mask for the bit test, you can display the enumeration constant instead of the immediate value.
+
+![Example usage](images/ida_qt_finished_product.png)
+<br>
+<sup>Example usage</sup>
 
 # Creating an IDA Pro Plugin for Bit Tests
 
