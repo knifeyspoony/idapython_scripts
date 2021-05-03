@@ -44,7 +44,7 @@ IDA doesn't handle bit tests for bit flags well in the decompiled output. For ex
 If you try to assign an enumeration value for ```2h``` in the code, it looks for enumerations having a member with a literal value of ```0x2``` . Instead, we want to check for a member with the value ```0x1 << 0x2```, which is actually ```0x4```.
 
 # Background
-If you already know about bit fields and bit flags, feel free to skip ahead to the [implementation](#implementation)
+If you already know about bit fields, bit masks, and bit tests, feel free to skip ahead to the [implementation](#implementation)
 
 **What are bit flags?**
 Bit flags are a compact way to represent a small set of binary values. For example, say your program has the concepts of users, and that different users have different permissions:
