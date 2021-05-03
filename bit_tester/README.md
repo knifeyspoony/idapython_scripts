@@ -1,15 +1,38 @@
-# IDA Bit Test Plugin
+# Creating an IDA Pro Plugin for Bit Tests
 
-## Problem
+- [Creating an IDA Pro Plugin for Bit Tests](#creating-an-ida-pro-plugin-for-bit-tests)
+- [Problem](#problem)
+- [Background](#background)
+- [Implementation](#implementation)
+  - [Preparation](#preparation)
+  - [Plugin Module, Scriptable Plugin, or Script?](#plugin-module-scriptable-plugin-or-script)
+  - [Use Case](#use-case)
+  - [Going from a Bit Test to an Enum Constant](#going-from-a-bit-test-to-an-enum-constant)
+  - [Replacing a Constant with an Enum](#replacing-a-constant-with-an-enum)
+  - [Create a Dialog Box](#create-a-dialog-box)
+    - [Install Tooling](#install-tooling)
+    - [Use QtDesigner to Create a Form](#use-qtdesigner-to-create-a-form)
+    - [Edit Signals and Slots](#edit-signals-and-slots)
+    - [Use uic to Compile our Form](#use-uic-to-compile-our-form)
+    - [Create our Dialog Component](#create-our-dialog-component)
+    - [UI Code](#ui-code)
+    - [Logging](#logging)
+  - [Create an IDA Plugin](#create-an-ida-plugin)
+    - [Plugin/Action Registration](#pluginaction-registration)
+    - [Plugin Action Handler](#plugin-action-handler)
+  - [Putting it all Together](#putting-it-all-together)
+
+# Problem
 IDA doesn't handle bit tests for bit flags well in the decompiled output. For example:
 
 ![Example of a bit test being applied](images/ida_bit_test_example.png)
+
 <sup>Example bit test instruction</sup>
 
 If you try to assign an enumeration value for ```2h``` in the code, it looks for enumerations having a member with a literal value of ```0x2``` . Instead, we want to check for a member with the value ```0x1 << 0x2```, which is actually ```0x4```.
 
-## Background
-If you already know about bit fields and bit flags, feel free to skip ahead to the [[IDA Bit Test Plugin#implementation]].
+# Background
+If you already know about bit fields and bit flags, feel free to skip ahead to the [implementation](#implementation)
 
 **What are bit flags?**
 Bit flags are a compact way to represent a small set of binary values. For example, say your program has the concepts of users, and that different users have different permissions:
@@ -117,6 +140,7 @@ If we are reverse engineering this application, can create an enumeration in IDA
 Imagine we're happily reverse engineering the program, and see the following code:
 
 ![Example of a bit mask being applied](images/ida_bit_mask_example.png)
+
 <sup>Example of a bit mask being applied</sup>
 
 Awesome, we see ```and eax, 4```, we use our handy Enum hotkey 'M', and choose *USER_PERMISSIONS_DELETE*.
@@ -124,6 +148,7 @@ Awesome, we see ```and eax, 4```, we use our handy Enum hotkey 'M', and choose *
 But what if we saw a test for *USER_PERMISSIONS_DELETE* that looks like this:
 
 ![Example of a bit test being applied](images/ida_bit_test_example.png)
+
 <sup>Example of a bit test being applied</sup>
 
 Now, we can't use the *USER_PERMISSIONS* enumeration directly anymore, since the value is ```0x2```, which in our enumeration is *USER_PERMISSION_WRITE*. Instead, we need to calculate the value which corresponds to bit ```0x2``` being set. 
@@ -135,12 +160,12 @@ So a bit test of ```0x2``` corresponds to a bit mask of ```0x4```, which means w
 
 This was a simple example that you could do in your head, but it quickly becomes a nuisance with higher bit test values or many different enumerations.
 
-## Implementation
+# Implementation
 
-### Preparation
+## Preparation
 Since I hadn't written a GUI plugin before, I decided to look for some previous examples on github. I had previously used some of the [FireEye FLARE plugins](https://github.com/fireeye/flare-ida), and they provided a good starting point for this project.
 
-### Plugin Module, Scriptable Plugin, or Script?
+## Plugin Module, Scriptable Plugin, or Script?
 IDA provides users various means of extending functionality. Depending on the complexity of your task, you might choose one over the others.
 
 | Type | Overview |
@@ -149,9 +174,10 @@ IDA provides users various means of extending functionality. Depending on the co
 | Scriptable Plugin | Written using the scripting API, these are written in C or Python and declare a function *PLUGIN_ENTRY* which should return a plugin_t instance |
 | Script | Written using the scripting API, these are invoked by the user, and while they can perform similar functionality to a scriptable plugin, they are not loaded and unloaded automatically like native plugins |
 
+<br>
 I decided to write a scriptable plugin in Python, both because my reference examples were written in Python, and because I'm more comfortable using it to design rapid prototypes than C/C++.
 
-### Use Case
+## Use Case
 What is the use case for this plugin? 
 > 1. A user comes across a bit test instruction
 > 2. They want to see if it refers to a known enumeration.
@@ -161,12 +187,12 @@ What is the use case for this plugin?
 Defining the use case helped me plan out the work. I tried to identify the essential pieces first to avoid writing a GUI and hooking everything up only to discover that something basic like finding an enumeration isn't feasible.
 
 So here are my tasks:
-1. Take a bit test value and find a matching enumeration. If we can't do this, there's no point writing a GUI.
+1. Take a bit test value and find a matching enumeration.
 2. Replace a constant value in the code with the matched enumeration name.
 3. Create a dialog box, populated with the values discovered in (1)
 4. Allow the user to choose (or not) an enumeration to apply.
 
-### Going from a Bit Test to an Enum Constant
+## Going from a Bit Test to an Enum Constant
 This part sounds pretty simple. How can we take a bit test instruction in IDA and find all matching enum constants? 
 
 ```python
@@ -197,10 +223,11 @@ for i in range(enum_count):
 		matches.append((const_name, enum_name))
 ```
 
-### Replacing a Constant with an Enum
+## Replacing a Constant with an Enum
 IDA lets you manually define the representation of a given operand. You can set it to any string that you want! To accomplish this manually, you can right click on a variable and select "Manual" to enter a custom string:
 
 ![Manual operands in IDA](images/ida_manual_operand.png)
+
 <sup>Manual operands in IDA</sup>
 
 There's also an API to accomplish this:
@@ -210,10 +237,10 @@ ida_bytes.set_forced_operand(effective_address, operand_index, manual_string)
 
 > Ok, full-disclosure here, I think there's a better way to do this, but I couldn't sort it out. IDA supports the concept of custom datatypes (```ida_bytes.data_format_t```). Instead of replacing the operand with a 'Manual' definition, I think we could have assigned a custom datatype which would also be displayed when you right click on an *immediate* value. I followed the [API example](https://github.com/idapython/src/blob/master/examples/core/custom_data_types_and_formats.py), but it would never display my type. If you know how to do this, let me know!
 
-### Create a Dialog Box
+## Create a Dialog Box
 This seemed like it would be the most daunting task However, IDA Pro supports using PyQt5 since 2015, and the tools make this pretty straightforward.
 
-#### Install Tooling
+### Install Tooling
 IDA already includes the PyQt5 libraries, but we can also install *QtDesigner* to create the dialog box, and the *Qt User Interface Compiler (uic)* to compile it:
 ```
 pip install pyqt5
@@ -227,62 +254,66 @@ This will install *QtDesigner* in your site-packages, e.g.:
 And *uic* in your python distribution's scripts folder, e.g.:
 ```Python39\Scripts\pyuic5.exe```
 
-#### Use QtDesigner to Create a Form
+### Use QtDesigner to Create a Form
 Launch QtDesigner, and create a new form ```File->New```
 
 Choose the default template *Dialog without Buttons*, then *Create*. Now we have a basic dialog box:
 
 ![Creating a QtDialog](images/ida_qtdialog.png)
+
 <sup>Creating a QtDialog</sup>
 
 
 Add a *Table Widget* to the dialog box, then add a *Dialog Button Box* below it:
 
 ![Adding a QTableWidget and QDialogButtonBox](images/ida_qtablewidget_and_qdialogbuttonbox.png)
+
 <sup>Adding a QTableWidget and QDialogButtonBox</sup>
 
 Now, right click in the gray space (the *Dialog* area) and select *Lay out->Lay Out Vertically*. Your components will automatically expand to fit the box:
 
 ![Laying our components out Vertically](images/ida_qt_vertical_layout.png)
-<sup>Laying our components out Vertically</sup>
+
+<sup>Laying our components out vertically</sup>
 
 We want to display two columns for each value we matched for our bit test, the enumeration and the constant within it:
 * Right-click within the *QTableWidget* (the white space), and select *Edit Items*. 
 * In the *Columns* tab, hit the '+' symbol, and name it *Enumeration*. Do this again and name the second column *Constant*. Click OK to exit this menu.
 
 ![Adding columns to our dialog box](images/ida_qt_columns.png)
+
 <sup>Adding columns to our dialog box</sup>
 
 Now we'll do a bunch of little tweaks to make it a bit more presentable. We can edit the properties of each component by selecting them in the *Object Inspector* window which is pinned at the top right by default. 
 
 Here are the changes to make (leave all other defaults):
 
-**QDialog**
-QObject->objectName: BitTesterDialog
-QWidget->geometry->Width: 420
-QWidget->geometry->Height: 300
-QWidget->sizePolicy->Horizontal Policy: Ignored
-QWidget->sizePolicy->Vertical Policy: Ignored
-QWidget->windowTitle: Apply Enum from Bit Test Value
-QDialog->sizeGripEnabled: true
+**QDialog**<br>
+QObject->objectName: BitTesterDialog<br>
+QWidget->geometry->Width: 420<br>
+QWidget->geometry->Height: 300<br>
+QWidget->sizePolicy->Horizontal Policy: Ignored<br>
+QWidget->sizePolicy->Vertical Policy: Ignored<br>
+QWidget->windowTitle: Apply Enum from Bit Test Value<br>
+QDialog->sizeGripEnabled: true<br>
 
-**QDialogButtonBox**
+**QDialogButtonBox**<br>
 QDialogButtonBox->centerButtons: true
 
-**QTableWidget**
-QAbstractItemView->editTriggers: NoEditTriggers
-QAbstractItemView->alternatingRowColors: true
-QAbstractItemView->selectionMode: SingleSelection
-QAbstractItemView->selectionBehaviour: SelectRows
-QTableView->showGrid: false
-QTableView->sortingEnabled: true
-Header->horizontalHeaderMinimumSectionSize: 200
-Header->horizontalHeaderStretchLastSection: true
-Header->verticalHeaderVisible: false
+**QTableWidget**<br>
+QAbstractItemView->editTriggers: NoEditTriggers<br>
+QAbstractItemView->alternatingRowColors: true<br>
+QAbstractItemView->selectionMode: SingleSelection<br>
+QAbstractItemView->selectionBehaviour: SelectRows<br>
+QTableView->showGrid: false<br>
+QTableView->sortingEnabled: true<br>
+Header->horizontalHeaderMinimumSectionSize: 200<br>
+Header->horizontalHeaderStretchLastSection: true<br>
+Header->verticalHeaderVisible: false<br>
 
 Save the layout. *QtDesigner* will output an xml representation of your form. This can be compiled to produce a python representation using the *Qt User Interface Compiler (uic)*. 
 
-##### Edit Signals and Slots
+### Edit Signals and Slots
 This is the part where we wire up user-interaction with the form to python methods. We haven't created our dialog component in python yet, but that doesn't matter for this step.
 
 Select *Edit->Edit Signals/Slots*. You'll notice that when you hover over your form, the different components will be highlighted in red. 
@@ -292,13 +323,14 @@ First, we want to wire up our *OK* and *Cancel* buttons. This means we want to w
 This is really simple to accomplish, just click anywhere within the OK/Cancel button area, and drag the connection to the *QDialog*. Since our components are filling up the whole box, the easiest way is to just drag to the very top of our dialog component (where our window title is). We can see the signals and slots displayed for both components, so select *accepted()*, then *accept()*. Repeat for *rejected()* and *reject()*:
 
 ![Configuring our signals and slots](images/ida_qt_signals_and_slots.png)
+
 <sup>Configuring our signals and slots</sup>
 
 What if the user just double clicks on a row in the form? We can handle that, too. Click within our *QTableWidget* and drag to the top of the *QDialog* component like we did for our buttons. Choose *cellDoubleClicked(int, int)* and *accept()*. 
 
 That's it! We'll see how to use this data when we create our *QDialog* instance later on.
 
-#### Use uic to Compile our Form
+### Use uic to Compile our Form
 If you installed ```pyqt5-tools```, then ```pyuic5``` might be on your system path. Otherwise, it's within your python distribution's Scripts folder: ```Python39\Scripts\pyuic5.exe```.
 
 Just point it at the *.ui* file we created, and it will print out the compiled python, which we can just redirect to a *.py* file as follows:
@@ -309,7 +341,7 @@ C:\My\Project\Folder> pyuic5.exe .\bit_tester_.ui > bit_tester_ui.py
 
 Great, that's our dialog box, now we just need to add our data to it, present it to the user on-demand, and capture their decision to change display values in IDA.
 
-#### Create our Dialog Component
+### Create our Dialog Component
 In our plugin code, we need to create an instance of our dialog box to display. If we want to extend or add any functionality to the dialog box, we should extend *QWidgets.QDialog*. Here's what we can do:
 
 ```python
@@ -349,7 +381,7 @@ During initialization, we set our `ui` property (inherited from *QDialog*) to an
 * addEnumEntry, which will insert a row into our table; and
 * getChoice, which returns the user-selected data in the table
 
-#### UI Code
+### UI Code
 Here's the UI code we generated using `uic` with a couple of tweaks mentioned below:
 ```python
 class Ui_BitTesterDialog(object):
@@ -427,7 +459,7 @@ We add an `__init__` method to the UI component to create a logger, and also pas
 
 Why would we be invoked without a value? If the user isn't on a line that has a valid immediate value, we still pop the dialog to behave like the built-in enumeration plugin (although the *\<NEW\>* functionality has yet to be implemented!).
 
-##### Logging
+### Logging
 
 Finally, there's a couple of calls to `init_logger`. Personally, I like to have discrete loggers when I'm learning about different things to make it clear what component I've messed up. Here's that method:
 
@@ -462,9 +494,9 @@ def init_logger(logger_name:typing.AnyStr,
     return logger
 ```
 
-### Create an IDA Plugin
+## Create an IDA Plugin
 
-#### Plugin/Action Registration
+### Plugin/Action Registration
 We need a way for the user to pop our dialog box and choose an enumeration. For this, we can use IDA's [plugin_t](https://www.hex-rays.com/products/ida/support/sdkdoc/classplugin__t.html) class.
 
 ```python
@@ -534,7 +566,7 @@ Some takeaways from the code above:
 	
 	3. Adds an entry to the "Edit->Operand type" menu.
 
-#### Plugin Action Handler
+### Plugin Action Handler
 Now, whenever the user presses Alt+Shift+M (chosen because it is *kind of* close to the enum shortcut "M"), our handler is invoked. Here's the handler code:
 ```python
 class ApplyEnumHandler(idaapi.action_handler_t):
@@ -644,25 +676,26 @@ Some takeaways from the code above:
 
 The `ctx` parameter passed to these methods is a [action_ctx_base_t ](https://www.hex-rays.com/products/ida/support/sdkdoc/structaction__ctx__base__t.html) instance, which has many useful properties like `cur_ea`, `cur_func`, etc. so that your action can save time by not having to query for contextual information.
 
-### Putting it all Together
+## Putting it all Together
 To recap, we have created:
-	* Code to convert a bit test value to a bit mask, and then find all applicable loaded enums and constants
-	* Code to set an immediate value to a manual string in the disassembly view
-	* A dialog box using *QtDesigner*, compiled to python with *uic*
-	* An action handler, which:
-		* converts a bit test value to an existing enum constant
-		* finds all applicable enums for the constant
-		* creates a custom dialog box and populates it with our enum data
-		* receives the user selection, and modifies the disassembly view to show their selected enum constant
-	* A plugin instance, which registers our action+handler
+* Code to convert a bit test value to a bit mask, and then find all applicable loaded enums and constants
+* Code to set an immediate value to a manual string in the disassembly view
+* A dialog box using *QtDesigner*, compiled to python with *uic*
+* An action handler, which:
+	* converts a bit test value to an existing enum constant
+	* finds all applicable enums for the constant
+	* creates a custom dialog box and populates it with our enum data
+	* receives the user selection, and modifies the disassembly view to show their selected enum constant
+* A plugin instance, which registers our action+handler
 		
 We can put everything into a single .py file to make it easy to "install" the plugin. The resulting code is only ~300 lines of python. 
 
 Here's an example usage of the finished product:
 
 ![Our plugin in action!](images/ida_qt_finished_product.png)
+
 <sup>Our plugin in action!</sup>
 
-Thanks for sticking it out and reading this article. I hope it proves useful if you're writing your own plugin.
+Thanks for sticking it out and reading this. I hope it proves useful if you're writing your own plugin.
 
 
