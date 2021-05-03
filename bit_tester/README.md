@@ -117,12 +117,14 @@ If we are reverse engineering this application, can create an enumeration in IDA
 Imagine we're happily reverse engineering the program, and see the following code:
 
 ![Example of a bit mask being applied](images/ida_bit_mask_example.png)
+<sup>Example of a bit mask being applied</sup>
 
 Awesome, we see ```and eax, 4```, we use our handy Enum hotkey 'M', and choose *USER_PERMISSIONS_DELETE*.
 
 But what if we saw a test for *USER_PERMISSIONS_DELETE* that looks like this:
 
 ![Example of a bit test being applied](images/ida_bit_test_example.png)
+<sup>Example of a bit test being applied</sup>
 
 Now, we can't use the *USER_PERMISSIONS* enumeration directly anymore, since the value is ```0x2```, which in our enumeration is *USER_PERMISSION_WRITE*. Instead, we need to calculate the value which corresponds to bit ```0x2``` being set. 
 
@@ -197,7 +199,9 @@ for i in range(enum_count):
 
 ### Replacing a Constant with an Enum
 IDA lets you manually define the representation of a given operand. You can set it to any string that you want! To accomplish this manually, you can right click on a variable and select "Manual" to enter a custom string:
+
 ![Manual operands in IDA](images/ida_manual_operand.png)
+<sup>Manual operands in IDA</sup>
 
 There's also an API to accomplish this:
 ```python
@@ -227,19 +231,27 @@ And *uic* in your python distribution's scripts folder, e.g.:
 Launch QtDesigner, and create a new form ```File->New```
 
 Choose the default template *Dialog without Buttons*, then *Create*. Now we have a basic dialog box:
+
 ![Creating a QtDialog](images/ida_qtdialog.png)
+<sup>Creating a QtDialog</sup>
 
 
-Add a *Table Widget* to the dialog box, then add a *Dialog Button Box* below it.
+Add a *Table Widget* to the dialog box, then add a *Dialog Button Box* below it:
+
 ![Adding a QTableWidget and QDialogButtonBox](images/ida_qtablewidget_and_qdialogbuttonbox.png)
+<sup>Adding a QTableWidget and QDialogButtonBox</sup>
 
 Now, right click in the gray space (the *Dialog* area) and select *Lay out->Lay Out Vertically*. Your components will automatically expand to fit the box:
+
 ![Laying our components out Vertically](images/ida_qt_vertical_layout.png)
+<sup>Laying our components out Vertically</sup>
 
 We want to display two columns for each value we matched for our bit test, the enumeration and the constant within it:
 * Right-click within the *QTableWidget* (the white space), and select *Edit Items*. 
 * In the *Columns* tab, hit the '+' symbol, and name it *Enumeration*. Do this again and name the second column *Constant*. Click OK to exit this menu.
+
 ![Adding columns to our dialog box](images/ida_qt_columns.png)
+<sup>Adding columns to our dialog box</sup>
 
 Now we'll do a bunch of little tweaks to make it a bit more presentable. We can edit the properties of each component by selecting them in the *Object Inspector* window which is pinned at the top right by default. 
 
@@ -278,7 +290,9 @@ Select *Edit->Edit Signals/Slots*. You'll notice that when you hover over your f
 First, we want to wire up our *OK* and *Cancel* buttons. This means we want to wire the *accepted()* method of the *QDialogButtonBox* to the *accept()* method of our *QDialog*, and likewise we want to connect *rejected()* to the *reject()* method. 
 
 This is really simple to accomplish, just click anywhere within the OK/Cancel button area, and drag the connection to the *QDialog*. Since our components are filling up the whole box, the easiest way is to just drag to the very top of our dialog component (where our window title is). We can see the signals and slots displayed for both components, so select *accepted()*, then *accept()*. Repeat for *rejected()* and *reject()*:
+
 ![Configuring our signals and slots](images/ida_qt_signals_and_slots.png)
+<sup>Configuring our signals and slots</sup>
 
 What if the user just double clicks on a row in the form? We can handle that, too. Click within our *QTableWidget* and drag to the top of the *QDialog* component like we did for our buttons. Choose *cellDoubleClicked(int, int)* and *accept()*. 
 
@@ -645,7 +659,9 @@ To recap, we have created:
 We can put everything into a single .py file to make it easy to "install" the plugin. The resulting code is only ~300 lines of python. 
 
 Here's an example usage of the finished product:
-![Our plugin in action](images/ida_qt_finished_product.png)
+
+![Our plugin in action!](images/ida_qt_finished_product.png)
+<sup>Our plugin in action!</sup>
 
 Thanks for sticking it out and reading this article. I hope it proves useful if you're writing your own plugin.
 
