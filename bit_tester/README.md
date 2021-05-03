@@ -1,5 +1,5 @@
 # Installation
-Just copy the file ks_bit_tester_plugin.py to your Scripts folder in your IDA Pro installation, e.g. `C:\Program Files\IDA Pro 7.6\plugins`
+Just copy the file `ks_bit_tester_plugin.py` to your Scripts folder in your IDA Pro installation, e.g. `C:\Program Files\IDA Pro 7.6\plugins`
 
 # Creating an IDA Pro Plugin for Bit Tests
 
