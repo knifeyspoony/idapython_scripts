@@ -3,7 +3,7 @@
 ## Problem
 IDA doesn't handle bit tests for bit flags well in the decompiled output. For example:
 
-![[IDA Bit Test Example.png]]
+![Example of a bit test being applied](images/ida_bit_test_example.png)
 <sup>Example bit test instruction</sup>
 
 If you try to assign an enumeration value for ```2h``` in the code, it looks for enumerations having a member with a literal value of ```0x2``` . Instead, we want to check for a member with the value ```0x1 << 0x2```, which is actually ```0x4```.
@@ -116,13 +116,13 @@ If we are reverse engineering this application, can create an enumeration in IDA
 
 Imagine we're happily reverse engineering the program, and see the following code:
 
-![[IDA Bit Mask Example.png]]
+![Example of a bit mask being applied](images/ida_bit_mask_example.png)
 
 Awesome, we see ```and eax, 4```, we use our handy Enum hotkey 'M', and choose *USER_PERMISSIONS_DELETE*.
 
 But what if we saw a test for *USER_PERMISSIONS_DELETE* that looks like this:
 
-![[IDA Bit Test Example.png]]
+![Example of a bit test being applied](images/ida_bit_test_example.png)
 
 Now, we can't use the *USER_PERMISSIONS* enumeration directly anymore, since the value is ```0x2```, which in our enumeration is *USER_PERMISSION_WRITE*. Instead, we need to calculate the value which corresponds to bit ```0x2``` being set. 
 
@@ -159,7 +159,7 @@ What is the use case for this plugin?
 Defining the use case helped me plan out the work. I tried to identify the essential pieces first to avoid writing a GUI and hooking everything up only to discover that something basic like finding an enumeration isn't feasible.
 
 So here are my tasks:
-1. Take a bit test value and find a matching enumeration. If I can't do this, there's no point writing a GUI.
+1. Take a bit test value and find a matching enumeration. If we can't do this, there's no point writing a GUI.
 2. Replace a constant value in the code with the matched enumeration name.
 3. Create a dialog box, populated with the values discovered in (1)
 4. Allow the user to choose (or not) an enumeration to apply.
@@ -197,7 +197,7 @@ for i in range(enum_count):
 
 ### Replacing a Constant with an Enum
 IDA lets you manually define the representation of a given operand. You can set it to any string that you want! To accomplish this manually, you can right click on a variable and select "Manual" to enter a custom string:
-![[IDA Manual Operand.png]]
+![Manual operands in IDA](images/ida_manual_operand.png)
 
 There's also an API to accomplish this:
 ```python
@@ -210,7 +210,7 @@ ida_bytes.set_forced_operand(effective_address, operand_index, manual_string)
 This seemed like it would be the most daunting task However, IDA Pro supports using PyQt5 since 2015, and the tools make this pretty straightforward.
 
 #### Install Tooling
-IDA already includes the PyQt5 libraries, but I also installed *QtDesigner* to create the dialog box, and the *Qt User Interface Compiler (uic)* to compile it:
+IDA already includes the PyQt5 libraries, but we can also install *QtDesigner* to create the dialog box, and the *Qt User Interface Compiler (uic)* to compile it:
 ```
 pip install pyqt5
 pip install pyqt5-tools
@@ -227,19 +227,19 @@ And *uic* in your python distribution's scripts folder, e.g.:
 Launch QtDesigner, and create a new form ```File->New```
 
 Choose the default template *Dialog without Buttons*, then *Create*. Now we have a basic dialog box:
-![[IDA QtDialog.png]]
+![Creating a QtDialog](images/ida_qtdialog.png)
 
 
 Add a *Table Widget* to the dialog box, then add a *Dialog Button Box* below it.
-![[Pasted image 20210430152926.png]]
+![Adding a QTableWidget and QDialogButtonBox](images/ida_qtablewidget_and_qdialogbuttonbox.png)
 
 Now, right click in the gray space (the *Dialog* area) and select *Lay out->Lay Out Vertically*. Your components will automatically expand to fit the box:
-![[Pasted image 20210430153058.png]]
+![Laying our components out Vertically](images/ida_qt_vertical_layout.png)
 
 We want to display two columns for each value we matched for our bit test, the enumeration and the constant within it:
 * Right-click within the *QTableWidget* (the white space), and select *Edit Items*. 
 * In the *Columns* tab, hit the '+' symbol, and name it *Enumeration*. Do this again and name the second column *Constant*. Click OK to exit this menu.
-![[Pasted image 20210430153550.png]]
+![Adding columns to our dialog box](images/ida_qt_columns.png)
 
 Now we'll do a bunch of little tweaks to make it a bit more presentable. We can edit the properties of each component by selecting them in the *Object Inspector* window which is pinned at the top right by default. 
 
@@ -278,7 +278,7 @@ Select *Edit->Edit Signals/Slots*. You'll notice that when you hover over your f
 First, we want to wire up our *OK* and *Cancel* buttons. This means we want to wire the *accepted()* method of the *QDialogButtonBox* to the *accept()* method of our *QDialog*, and likewise we want to connect *rejected()* to the *reject()* method. 
 
 This is really simple to accomplish, just click anywhere within the OK/Cancel button area, and drag the connection to the *QDialog*. Since our components are filling up the whole box, the easiest way is to just drag to the very top of our dialog component (where our window title is). We can see the signals and slots displayed for both components, so select *accepted()*, then *accept()*. Repeat for *rejected()* and *reject()*:
-![[Pasted image 20210430171631.png]]
+![Configuring our signals and slots](images/ida_qt_signals_and_slots.png)
 
 What if the user just double clicks on a row in the form? We can handle that, too. Click within our *QTableWidget* and drag to the top of the *QDialog* component like we did for our buttons. Choose *cellDoubleClicked(int, int)* and *accept()*. 
 
@@ -296,7 +296,7 @@ C:\My\Project\Folder> pyuic5.exe .\bit_tester_.ui > bit_tester_ui.py
 Great, that's our dialog box, now we just need to add our data to it, present it to the user on-demand, and capture their decision to change display values in IDA.
 
 #### Create our Dialog Component
-In our plugin code, we need to create an instance of our dialog box to display. If we want to extend or add any functionality to the dialog box, we should extend *QWidgets.QDialog*. Here's what I ended up with:
+In our plugin code, we need to create an instance of our dialog box to display. If we want to extend or add any functionality to the dialog box, we should extend *QWidgets.QDialog*. Here's what we can do:
 
 ```python
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -415,7 +415,7 @@ Why would we be invoked without a value? If the user isn't on a line that has a 
 
 ##### Logging
 
-Finally, there's a couple of calls to `init_logger`. I like to have discrete loggers when I'm learning about different things to make it clear what component I've messed up. Here's that method:
+Finally, there's a couple of calls to `init_logger`. Personally, I like to have discrete loggers when I'm learning about different things to make it clear what component I've messed up. Here's that method:
 
 ```python
 import logging
@@ -594,7 +594,7 @@ class ApplyEnumHandler(idaapi.action_handler_t):
                     break
         
         if value is None:
-            # Originally I wasn't going to pop a form here, but then the user might think the
+            # Originally wasn't going to pop a form here, but then the user might think the
             # plugin is broken..
             self.logger.debug(f"No immediate values less than 64 to check on current line.")
         else:
@@ -642,7 +642,10 @@ To recap, we have created:
 		* receives the user selection, and modifies the disassembly view to show their selected enum constant
 	* A plugin instance, which registers our action+handler
 		
-I chose to put everything into a single .py file to make it easy to "install" the plugin. The resulting code is only ~300 lines of python. 
+We can put everything into a single .py file to make it easy to "install" the plugin. The resulting code is only ~300 lines of python. 
+
+Here's an example usage of the finished product:
+![Our plugin in action](images/ida_qt_finished_product.png)
 
 Thanks for sticking it out and reading this article. I hope it proves useful if you're writing your own plugin.
 
