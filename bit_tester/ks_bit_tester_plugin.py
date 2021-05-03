@@ -11,12 +11,12 @@ import idc
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-ACTION_NAME = "Enum (bit flag)"
-PLUGIN_DISPLAY_NAME = "Enum from Bit Flag"
-PLUGIN_HELP = "Searches imported enumerations for a bit flag which match the bit test value"
+ACTION_NAME = "Enum (bit test)"
+PLUGIN_DISPLAY_NAME = "Enum from Bit Test"
+PLUGIN_HELP = "Searches imported enumerations using a bit mask generated from a bit test value"
 PLUGIN_SHORTCUT = "Alt+Shift+M"
-PLUGIN_COMMENT = "Apply an enumeration from a bit flag location"
-PLUGIN_MENU_PATH = "Edit/Operand type/Enum member..."
+PLUGIN_COMMENT = "Apply an enumeration from a bit test"
+PLUGIN_MENU_PATH = "Edit/Operand type/Enum member..."
 LOG_LEVEL = logging.ERROR
 
 class ApplyEnumHandler(idaapi.action_handler_t):
@@ -231,9 +231,9 @@ class Ui_BitTesterDialog(object):
     def retranslateUi(self, BitTesterDialog):
         _translate = QtCore.QCoreApplication.translate
         if self.valueStr:
-            BitTesterDialog.setWindowTitle(_translate("BitTesterDialog", f"Apply Enum from Bit Test Value: {self.valueStr}"))
+            BitTesterDialog.setWindowTitle(_translate("BitTesterDialog", f"Apply Enum from Bit Mask: {self.valueStr}"))
         else:
-            BitTesterDialog.setWindowTitle(_translate("BitTesterDialog", f"Apply Enum from Bit Test Value"))
+            BitTesterDialog.setWindowTitle(_translate("BitTesterDialog", f"Apply Enum from Bit Mask"))
         self.tableWidget.setSortingEnabled(True)
         item = self.tableWidget.horizontalHeaderItem(0)
         item.setText(_translate("BitTesterDialog", "Enumeration"))

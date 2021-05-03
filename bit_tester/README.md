@@ -10,6 +10,9 @@ When you see a bit test, select the immediate/line and press `Alt+Shift+M`. If t
 
 # Creating an IDA Pro Plugin for Bit Tests
 
+- [Installation](#installation)
+- [Usage](#usage)
+- [Creating an IDA Pro Plugin for Bit Tests](#creating-an-ida-pro-plugin-for-bit-tests)
 - [Problem](#problem)
 - [Background](#background)
 - [Implementation](#implementation)
@@ -303,7 +306,7 @@ QWidget->geometry->Width: 420<br>
 QWidget->geometry->Height: 300<br>
 QWidget->sizePolicy->Horizontal Policy: Ignored<br>
 QWidget->sizePolicy->Vertical Policy: Ignored<br>
-QWidget->windowTitle: Apply Enum from Bit Test Value<br>
+QWidget->windowTitle: Apply Enum from Bit Mask<br>
 QDialog->sizeGripEnabled: true<br>
 
 **QDialogButtonBox**<br>
@@ -461,9 +464,9 @@ We add an `__init__` method to the UI component to create a logger, and also pas
 
 ```python
    if self.valueStr:
-        BitTesterDialog.setWindowTitle(_translate("BitTesterDialog", f"Apply Enum from Bit Test Value: {self.valueStr}"))
+        BitTesterDialog.setWindowTitle(_translate("BitTesterDialog", f"Apply Enum from Bit Mask: {self.valueStr}"))
     else:
-        BitTesterDialog.setWindowTitle(_translate("BitTesterDialog", f"Apply Enum from Bit Test Value"))
+        BitTesterDialog.setWindowTitle(_translate("BitTesterDialog", f"Apply Enum from Bit Mask"))
 ```
 
 Why would we be invoked without a value? If the user isn't on a line that has a valid immediate value, we still pop the dialog to behave like the built-in enumeration plugin (although the *\<NEW\>* functionality has yet to be implemented!).
@@ -510,11 +513,11 @@ We need a way for the user to pop our dialog box and choose an enumeration. For 
 
 ```python
 
-ACTION_NAME = "Enum (bit flag)"
-PLUGIN_DISPLAY_NAME = "Enum from Bit Flag"
-PLUGIN_HELP = "Searches imported enumerations for a bit flag which match the bit test value"
+ACTION_NAME = "Enum (bit test)"
+PLUGIN_DISPLAY_NAME = "Enum from Bit Test"
+PLUGIN_HELP = "Searches imported enumerations using a bit mask generated from a bit test value"
 PLUGIN_SHORTCUT = "Alt+Shift+M"
-PLUGIN_COMMENT = "Apply an enumeration from a bit flag location"
+PLUGIN_COMMENT = "Apply an enumeration from a bit test"
 PLUGIN_MENU_PATH = "Edit/Operand type/Enum member..."
 
 class bit_tester_plugin_t(idaapi.plugin_t):
