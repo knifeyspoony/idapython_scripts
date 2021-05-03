@@ -175,7 +175,7 @@ This was a simple example that you could do in your head, but it quickly becomes
 # Implementation
 
 ## Preparation
-Since I hadn't written a GUI plugin before, I decided to look for some previous examples on github. I had previously used some of the [FireEye FLARE plugins](https://github.com/fireeye/flare-ida), and they provided a good starting point for this project.
+Since I hadn't written a GUI plugin before, I decided to look for some examples on github. I had previously used some of the [FireEye FLARE plugins](https://github.com/fireeye/flare-ida), and they provided a good starting point for this project.
 
 ## Plugin Module, Scriptable Plugin, or Script?
 IDA provides users various means of extending functionality. Depending on the complexity of your task, you might choose one over the others.
