@@ -111,17 +111,17 @@ if (user->permissions.write_access) {
 
 When the code above is compiled, it will result in something like this:
 ```assembly
-mov eax, [ecx+8] 		;; Move the permissions byte into the al register
-and eax, 1h				;; Test if bit 1 is set (write_access)
-test eax, eax			;; Was it set?
-jnz WRITE_ALLOWED		;; If so, they can write!
+mov eax, [ecx+8]  ;; Move the permissions byte into the al register
+and eax, 1h       ;; Test if bit 1 is set (write_access)
+test eax, eax     ;; Was it set?
+jnz WRITE_ALLOWED ;; If so, they can write!
 ```
 
 However, if the developer is using ```_bittest()```, it will look something like this;
 ```assembly
 mov al, byte ptr [ecx+8] ;; Move the permissions byte into the al register
-bt al, 1h				 ;; Test if bit 1 is set (write_access)
-jnz WRITE_ALLOWED		 ;; If so, they can write!
+bt al, 1h                ;; Test if bit 1 is set (write_access)
+jnz WRITE_ALLOWED        ;; If so, they can write!
 ```
 
 **Why is this a problem?**
