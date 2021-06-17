@@ -100,9 +100,9 @@ user_bob.permissions.read_access = 1;
 
 We can also use the fields to determine access for a given user:
 ```C
-// Does the user have write access?
-if (user->permissions.write_access) {
-	// Let them write!
+// Does the user have delete access?
+if (user->permissions.delete_access) {
+	// Let them delete!
 	...
 }
 ```
@@ -110,21 +110,20 @@ if (user->permissions.write_access) {
 When the code above is compiled, it will result in something like this:
 ```assembly
 mov eax, [ecx+8]  ;; Move the permissions byte into the al register
-and eax, 1h       ;; Test if bit 1 is set (write_access)
+and eax, 4h       ;; Mask with 0x4, effectively checking if bit 2 is set (delete_access)
 test eax, eax     ;; Was it set?
-jnz WRITE_ALLOWED ;; If so, they can write!
+jnz DELETE_ALLOWED ;; If so, they can delete!
 ```
 
 However, if the developer is using ```_bittest()``` or the compiler decides to, it will look something like this:
 ```assembly
 mov al, byte ptr [ecx+8] ;; Move the permissions byte into the al register
-bt al, 1h                ;; Test if bit 1 is set (write_access)
-jnz WRITE_ALLOWED        ;; If so, they can write!
+bt al, 2h                ;; Test if bit 2 is set (delete_access)
+jnz DELETE_ALLOWED        ;; If so, they can delete!
 ```
 
 **Why is this a problem?**
-When you're dealing with someone else's code, you may not have the structure definition for a user, or maybe you don't even have access to user instances at all. Say there exists an API to create users:
-
+These are two common means of testing the same thing! Typically, you only have the constant enumeration values at your disposal. Say there exists an API to create users:
 ```C
 int CreateUser(char* Name, USER_PERMISSIONS Flags);
 ```
