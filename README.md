@@ -8,7 +8,7 @@ A very basic script that highlights call instructions.
 Automatically sets immediate constants above 0xC0000000 to their equivalent Windows error code, if applicable. Could (should) probably be improved to avoid false positives.
 
 ## [bit_tester](bit_tester)
-Somewhat useful. It lets you apply enumeration values from bit tests. Includes a guide for writing a basic IDA Pro GUI plugin using Qt5.
+Somewhat useful. It lets you apply enumeration values from bit tests. Includes a guide for writing a basic GUI plugin for IDA Pro using python and Qt5.
 
 In cases where this test:
 ```assembly
