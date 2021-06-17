@@ -115,7 +115,7 @@ test eax, eax     ;; Was it set?
 jnz WRITE_ALLOWED ;; If so, they can write!
 ```
 
-However, if the developer is using ```_bittest()```, it will look something like this;
+However, if the developer is using ```_bittest()``` or the compiler decides to, it will look something like this:
 ```assembly
 mov al, byte ptr [ecx+8] ;; Move the permissions byte into the al register
 bt al, 1h                ;; Test if bit 1 is set (write_access)
