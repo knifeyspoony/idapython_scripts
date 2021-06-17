@@ -100,8 +100,6 @@ user_bob.permissions.read_access = 1;
 
 We can also use the fields to determine access for a given user:
 ```C
-#define WRITE_ACCESS_MASK 0x02
-
 // Does the user have write access?
 if (user->permissions.write_access) {
 	// Let them write!
