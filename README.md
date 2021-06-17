@@ -1,14 +1,14 @@
 # Contents
 Some simple IDA Pro scripts.
 
-## ks_call_highlighter
+## [ks_call_highlighter](ks_call_highlighter.py)
 A very basic script that highlights call instructions.
 
-## ks_winstatus
+## [ks_winstatus](ks_winstatus.py)
 Automatically sets immediate constants above 0xC0000000 to their equivalent Windows error code, if applicable. Could (should) probably be improved to avoid false positives.
 
-## bit_tester
-Somewhat useful. It lets you apply enumeration values from bit tests.
+## [bit_tester](bit_tester)
+Somewhat useful. It lets you apply enumeration values from bit tests. Includes a guide for writing a basic IDA Pro GUI plugin using Qt5.
 
 In cases where this test:
 ```assembly
