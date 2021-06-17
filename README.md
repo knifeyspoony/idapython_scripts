@@ -17,11 +17,11 @@ test eax, eax
 jnz SOMEWHERE
 ```
 
-Is compiled like this:
+is compiled like this:
 ```assembly
 bt al, 2h
 jnz SOMEWHERE        
 ```
 
-In this case, bit_tester will search for enumeration values of 0x4, and allow you to assign them in place of of 0x2.
+bit_tester will search for enumeration values of 0x4, and allow you to assign them in place of of 0x2.
 
